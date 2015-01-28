@@ -31,7 +31,9 @@ git clone https://github.com/binkybear/kernel_msm.git -b android-msm-flo-3.4-kit
 git clone https://github.com/binkybear/flo.git -b Cyanogenmod cyanflodeb
 git clone https://github.com/binkybear/furnace_kernel_lge_hammerhead.git -b android-4.4
 git clone https://github.com/binkybear/furnace_kernel_caf_hammerhead.git -b cm-11.0
+git clone https://github.com/bsmitty83/Kernel_Tuna_AOSP.git -b FML_Kali
 git clone https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/arm/arm-eabi-4.7
+git clone https://github.com/RobbieL811/Sabermod.git -b arm-eabi-4.9
 ```
 
 If you plan on only building for one device then you only need the kernel you plan on building for.  After that you need to edit androidmenu.sh and change LOCALGIT to 1:

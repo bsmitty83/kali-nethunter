@@ -1,0 +1,74 @@
+#####################################################
+# Create Galaxy Nexus Kernel (L5)
+# created by @l0rdg3x
+# modified by bsmitty83
+#####################################################
+f_tuna_kernel(){
+
+echo "Downloading Android Toolchian"
+if [[ $LOCALGIT == 1 ]]; then
+	echo "Copying toolchain to rootfs"
+        cp -rf ${basepwd}/arm-eabi-4.9 ${basedir}/toolchain
+else
+	git clone https://github.com/RobbieL811/Sabermod.git -b arm-eabi-4.9 ${basedir}/toolchain
+fi
+
+echo "Setting export paths"
+# Set path for Kernel building
+export ARCH=arm
+export SUBARCH=arm
+export CROSS_COMPILE=${basedir}/toolchain/bin/arm-eabi-
+
+f_kernel_build_init
+
+cd ${basedir}
+echo "Downloading Kernel"
+if [[ $LOCALGIT == 1 ]]; then
+  echo "Copying kernel to rootfs"
+  cp -rf ${basepwd}/Np-tuna ${basedir}/kernel
+else
+  git clone https://github.com/bsmitty83/Kernel_Tuna_AOSP.git -b FML_Kali ${basedir}/kernel
+fi
+
+cd ${basedir}/kernel
+
+make clean
+sleep 10
+make FA_Kali_defconfig
+
+# Custom installer for Galaxy Nexus modified from Full Auto kernel
+
+cp -rf ${basedir}/kernel/AnyKernel/tmp/* ${basedir}/flashkernel/kernel/
+cp -rf ${basedir}/kernel/AnyKernel/system/* ${basedir}/flashkernel/system/
+
+# Attach kernel builder to updater-script
+echo "#KERNEL_SCRIPT_START" >> ${basedir}/flashkernel/META-INF/com/google/android/updater-script
+cat << EOF > ${basedir}/flashkernel/META-INF/com/google/android/updater-script
+
+ui_print("* Starting Kernel install for  Galaxy Nexus       *");
+ui_print("* Mounting System...                        *");
+mount("ext4", "EMMC", "/dev/block/platform/omap/omap_hsmmc.0/by-name/system", "/system");
+package_extract_dir("system", "/system");
+set_perm_recursive(0, 0, 0644, 0644, "/system/lib/modules");
+set_perm_recursive(0, 2000, 0755, 0755, "/system/bin");
+set_perm_recursive(0, 2000, 0755, 0755, "/system/xbin");
+set_perm_recursive(0, 0, 0755, 0755, "/system/etc/init.d");
+unmount("/system");
+package_extract_dir("kernel", "/tmp");
+set_perm(0, 0, 0777, "/tmp/edit_ramdisk.sh");
+set_perm(0, 0, 0777, "/tmp/abootimg");
+set_perm(0, 0, 0777, "/tmp/busybox");
+set_perm(0, 0, 0755, "/tmp/cleansystem.sh");
+
+ui_print("* Cleaning /system/app...                   *");
+run_program("/tmp/cleansystem.sh");
+run_program("/sbin/busybox", "dd", "if=/dev/block/platform/omap/omap_hsmmc.0/by-name/boot", "of=/tmp/boot.img");
+run_program("/tmp/unpackbootimg", "-i", "/tmp/boot.img", "-o", "/tmp/");
+run_program("/tmp/mkbootimg.sh");
+run_program("/sbin/busybox", "dd", "if=/tmp/newboot.img", "of=/dev/block/platform/omap/omap_hsmmc.0/by-name/boot");
+
+ui_print("* Kernel installation completed...          *");
+EOF
+
+f_kernel_build
+}

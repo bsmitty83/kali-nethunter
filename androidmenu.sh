@@ -40,6 +40,8 @@ FROZENKERNEL=0
 # - Nexus 4
 # git clone https://github.com/binkybear/kernel_msm.git -b android-msm-mako-3.4-kitkat-mr2 mako
 # git clone https://github.com/binkybear/####################.git -b ########## nexus4-5
+# - Nexus Prime
+# git clone https://github.com/bsmitty83/Kernel_Tuna_AOSP.git -b FML-Kali
 # - OnePlus One
 # git clone https://github.com/binkybear/AK-OnePone.git -b cm-11.0-ak oneplus11
 # git clone https://github.com/binkybear/furnace-bacon.git -b cm-12.0 oneplus12
@@ -52,6 +54,8 @@ FROZENKERNEL=0
 # - Toolchain
 # git clone https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/arm/arm-eabi-4.7
 # git clone https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9 -b lollipop-release
+# git clone https://github.com/RobbieL811/Sabermod.git -b arm-eabi-4.9
+
 ######## Local Repo ##########
 # to update :  for directory in $(ls -l |grep "^d" | awk -F" " '{print $9}');do cd $directory && git pull && cd ..;done
 # 0 = use remote git clone | 1 = local copies
@@ -69,7 +73,7 @@ source devices/nexus7-flo-deb
 source devices/nexus5-hammerhead
 source devices/nexus4-mako
 source devices/one-bacon
-
+source devices/nexus_prime-tuna
 ######### Set paths and permissions  #######
 
 basepwd=`pwd`
@@ -200,6 +204,9 @@ echo ""
 echo -e "\e[31m ---- NEXUS 9 (2014) - VOLANTIS ------------------------------------------------------\e[0m"
 echo "  [7] Build for Nexus 9 with wireless USB support (Android 5)"
 echo ""
+echo -e "\e[31m ---- NEXUS PRIME -TUNA --------------------------------------------------------------\e[0m"
+echo "  [8] Build for Galaxy Nexus with wireless USB support (Android 5)"
+echo ""
 echo "  [0] Exit to Main Menu"
 echo ""
 echo ""
@@ -215,6 +222,7 @@ case $nexusmenuchoice in
 5) d_clear; f_hammerhead ;;
 6) d_clear; f_shamu ;;
 7) d_clear; f_flounder ;;
+8) d_clear; f_tuna ;;
 0) d_clear; f_interface ;;
 *) echo "Incorrect choice..." ;
 esac
@@ -441,6 +449,28 @@ case $mako_menuchoice in
 0) d_clear; f_interface ;;
 *) echo "Incorrect choice... " ;
 esac
+}
+
+f_tuna(){
+echo -e "\e[31m	------------------------- NEXUS PRIME -----------------------\e[0m"
+echo ""
+echo "  [1] Build All - Kali rootfs and Kernel (Android 5)"
+echo "  [2] Build Kernel Only (Android 5)"
+echo "	[0] Exit to Main Menu"
+echo ""
+echo ""
+# wait for character input
+
+read -p "Choice: " tuna_menuchoice
+
+case $tuna_menuchoice in
+
+1) d_clear; f_rootfs ; f_flashzip ; f_tuna_kernel5 ; f_zip_save ; f_zip_kernel_save ; f_rom_build ;;
+2) d_clear; f_tuna_kernel5 ; f_zip_kernel_save ;;
+0) d_clear; f_interface ;;
+*) echo "Incorrect choice... " ;
+esac
+
 }
 
 f_galaxyS5(){
@@ -1209,6 +1239,24 @@ case $1 in
         rm -rf ${basedir}
         exit;;
 
+	tuna)
+        if [ $3 == "" ]; then
+          exportdir="~/NetHunter"
+        else
+          exportdir="$3"
+        fi
+        exportdir=${exportdir%/}
+        device=tuna
+        f_check_version_noui
+        f_tuna_kernel
+        f_zip_kernel_save
+        cd ${basedir}
+        mkdir -p $exportdir/Kernels/Tuna
+        cp kernel-kali-$VERSION.zip $exportdir/Kernels/Tuna/Kernel-$device-$VERSION.zip
+        cp kernel-kali-$VERSION.sha1sum $exportdir/Kernels/Tuna/Kernel-$device-$VERSION.sha1sum
+        rm -rf ${basedir}
+        exit;;
+
       hammerhead)
         if [ $3 == "" ]; then
           exportdir="~/NetHunter"
@@ -1323,6 +1371,7 @@ case $1 in
     echo "   [manta] ------------Manta (Nexus 10)"
     echo "   [sgs5] -------------Samsung Galaxy S5 (G900)"
     echo "   [sgs4] -------------Samsung Galaxy S4 (I9500)"
+    echo "   [tuna] -------------Tuna (Galaxy Nexus)"
     echo ""
     echo "Directory:"
     echo "Where the generated files will be put. Default is ~/NetHunter"
